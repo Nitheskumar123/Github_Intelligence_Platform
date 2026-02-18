@@ -16,6 +16,33 @@ urlpatterns = [
     path('auth/logout/', views.logout_user, name='logout'),
     
     # Repository APIs
-    path('repositories/sync/', views.sync_repositories, name='sync_repositories'),
     path('repositories/', views.list_repositories, name='list_repositories'),
+    path('repositories/sync/', views.sync_repositories, name='sync_repositories'),
+    path('repositories/<int:repo_id>/', views.repository_detail, name='repository_detail'),
+    path('repositories/<int:repo_id>/sync/', views.sync_single_repository, name='sync_single_repository'),
+    
+    # Pull Request APIs
+    path('repositories/<int:repo_id>/pulls/', views.list_pull_requests, name='list_pull_requests'),
+    path('repositories/<int:repo_id>/pulls/<int:pr_number>/', views.pull_request_detail, name='pull_request_detail'),
+    
+    # Issue APIs
+    path('repositories/<int:repo_id>/issues/', views.list_issues, name='list_issues'),
+    path('repositories/<int:repo_id>/issues/<int:issue_number>/', views.issue_detail, name='issue_detail'),
+    
+    # Commit APIs
+    path('repositories/<int:repo_id>/commits/', views.list_commits, name='list_commits'),
+    
+    # Contributor APIs
+    path('repositories/<int:repo_id>/contributors/', views.list_contributors, name='list_contributors'),
+    
+    # Language Stats
+    path('repositories/<int:repo_id>/languages/', views.repository_languages, name='repository_languages'),
+    
+    # Activity Feed
+    path('repositories/<int:repo_id>/activity/', views.repository_activity, name='repository_activity'),
+    
+    # Webhook APIs
+    path('repositories/<int:repo_id>/webhook/', views.setup_webhook, name='setup_webhook'),
+    path('repositories/<int:repo_id>/webhook/status/', views.webhook_status, name='webhook_status'),
+    path('webhooks/github/', views.github_webhook_receiver, name='github_webhook_receiver'),
 ]

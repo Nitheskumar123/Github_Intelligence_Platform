@@ -400,66 +400,73 @@
             }
         }
 
+        // Find this function and update the repo card HTML:
         function displayRepositories(repos) {
             const container = document.getElementById('repositoriesList');
 
             if (repos.length === 0) {
                 container.innerHTML = `
-                    <div class="empty-state">
-                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
-                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                        </svg>
-                        <h3>No Repositories Yet</h3>
-                        <p>Click "Sync Repositories" to load your GitHub repos</p>
-                        <button onclick="syncRepositories()" class="btn-primary">Sync Now</button>
-                    </div>
-                `;
+            <div class="empty-state">
+                <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <h3>No Repositories Yet</h3>
+                <p>Click "Sync Repositories" to load your GitHub repos</p>
+                <button onclick="syncRepositories()" class="btn-primary">Sync Now</button>
+            </div>
+        `;
                 return;
             }
 
             container.innerHTML = repos.map(repo => `
-                <div class="repo-card">
-                    <div class="repo-header">
-                        <h3 class="repo-name">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                            </svg>
-                            ${repo.full_name}
-                        </h3>
-                        ${repo.is_private ? '<span class="badge-private">Private</span>' : '<span class="badge-public">Public</span>'}
-                    </div>
-                    ${repo.description ? `<p class="repo-description">${repo.description}</p>` : ''}
-                    <div class="repo-meta">
-                        ${repo.language ? `<span class="meta-item"><span class="language-dot" style="background-color: ${getLanguageColor(repo.language)}"></span>${repo.language}</span>` : ''}
-                        <span class="meta-item">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                            </svg>
-                            ${repo.stars_count}
-                        </span>
-                        <span class="meta-item">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <circle cx="18" cy="5" r="3"></circle>
-                                <circle cx="6" cy="12" r="3"></circle>
-                                <circle cx="18" cy="19" r="3"></circle>
-                                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-                                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-                            </svg>
-                            ${repo.forks_count}
-                        </span>
-                    </div>
-                    <div class="repo-actions">
-                        <a href="${repo.html_url}" target="_blank" class="btn-link">
-                            View on GitHub
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                                <polyline points="15 3 21 3 21 9"></polyline>
-                                <line x1="10" y1="14" x2="21" y2="3"></line>
-                            </svg>
-                        </a>
-                    </div>
-                </div>
-            `).join('');
+        <div class="repo-card">
+            <div class="repo-header">
+                <h3 class="repo-name">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    ${repo.full_name}
+                </h3>
+                ${repo.is_private ? '<span class="badge-private">Private</span>' : '<span class="badge-public">Public</span>'}
+            </div>
+            ${repo.description ? `<p class="repo-description">${repo.description}</p>` : ''}
+            <div class="repo-meta">
+                ${repo.language ? `<span class="meta-item"><span class="language-dot" style="background-color: ${getLanguageColor(repo.language)}"></span>${repo.language}</span>` : ''}
+                <span class="meta-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                    </svg>
+                    ${repo.stars_count}
+                </span>
+                <span class="meta-item">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="18" cy="5" r="3"></circle>
+                        <circle cx="6" cy="12" r="3"></circle>
+                        <circle cx="18" cy="19" r="3"></circle>
+                        <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                        <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                    </svg>
+                    ${repo.forks_count}
+                </span>
+            </div>
+            <div class="repo-actions">
+                <a href="/repository-detail.html?id=${repo.id}" class="btn-link">
+                    View Details
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </a>
+                <a href="${repo.html_url}" target="_blank" class="btn-link">
+                    GitHub
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                        <polyline points="15 3 21 3 21 9"></polyline>
+                        <line x1="10" y1="14" x2="21" y2="3"></line>
+                    </svg>
+                </a>
+            </div>
+        </div>
+    `).join('');
         }
 
         function updateStats(repos) {
