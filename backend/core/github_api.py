@@ -123,31 +123,39 @@ class GitHubAPIClient:
             pulls = repo.get_pulls(state=state, sort='updated', direction='desc')
             
             pr_list = []
-            for pr in pulls[:limit]:
-                pr_list.append({
-                    'id': pr.id,
-                    'number': pr.number,
-                    'title': pr.title,
-                    'body': pr.body,
-                    'state': pr.state,
-                    'html_url': pr.html_url,
-                    'author_login': pr.user.login,
-                    'author_avatar_url': pr.user.avatar_url,
-                    'head_branch': pr.head.ref,
-                    'base_branch': pr.base.ref,
-                    'additions': pr.additions,
-                    'deletions': pr.deletions,
-                    'changed_files': pr.changed_files,
-                    'comments_count': pr.comments,
-                    'review_comments_count': pr.review_comments,
-                    'commits_count': pr.commits,
-                    'mergeable': pr.mergeable,
-                    'merged': pr.merged,
-                    'merged_at': pr.merged_at,
-                    'closed_at': pr.closed_at,
-                    'created_at': pr.created_at,
-                    'updated_at': pr.updated_at,
-                })
+            count = 0
+            for pr in pulls:
+                if count >= limit:
+                    break
+                count += 1
+                try:
+                    pr_list.append({
+                        'id': pr.id,
+                        'number': pr.number,
+                        'title': pr.title,
+                        'body': pr.body,
+                        'state': pr.state,
+                        'html_url': pr.html_url,
+                        'author_login': pr.user.login if pr.user else 'unknown',
+                        'author_avatar_url': pr.user.avatar_url if pr.user else None,
+                        'head_branch': pr.head.ref if pr.head else 'deleted',
+                        'base_branch': pr.base.ref if pr.base else 'deleted',
+                        'additions': pr.additions or 0,
+                        'deletions': pr.deletions or 0,
+                        'changed_files': pr.changed_files or 0,
+                        'comments_count': pr.comments or 0,
+                        'review_comments_count': pr.review_comments or 0,
+                        'commits_count': pr.commits or 0,
+                        'mergeable': pr.mergeable,
+                        'merged': pr.merged,
+                        'merged_at': pr.merged_at,
+                        'closed_at': pr.closed_at,
+                        'created_at': pr.created_at,
+                        'updated_at': pr.updated_at,
+                    })
+                except Exception as e:
+                    logger.warning(f"Skipping PR #{pr.number} due to: {e}")
+                    continue
             
             return pr_list
         except GithubException as e:
@@ -163,27 +171,36 @@ class GitHubAPIClient:
             issues = repo.get_issues(state=state, sort='updated', direction='desc')
             
             issue_list = []
-            for issue in issues[:limit]:
+            count = 0
+            for issue in issues:
                 # Skip pull requests (they show up in issues API)
                 if issue.pull_request:
                     continue
                 
-                issue_list.append({
-                    'id': issue.id,
-                    'number': issue.number,
-                    'title': issue.title,
-                    'body': issue.body,
-                    'state': issue.state,
-                    'html_url': issue.html_url,
-                    'author_login': issue.user.login,
-                    'author_avatar_url': issue.user.avatar_url,
-                    'labels': [{'name': label.name, 'color': label.color} for label in issue.labels],
-                    'assignees': [assignee.login for assignee in issue.assignees],
-                    'comments_count': issue.comments,
-                    'closed_at': issue.closed_at,
-                    'created_at': issue.created_at,
-                    'updated_at': issue.updated_at,
-                })
+                if count >= limit:
+                    break
+                count += 1
+                
+                try:
+                    issue_list.append({
+                        'id': issue.id,
+                        'number': issue.number,
+                        'title': issue.title,
+                        'body': issue.body or '',
+                        'state': issue.state,
+                        'html_url': issue.html_url,
+                        'author_login': issue.user.login if issue.user else 'unknown',
+                        'author_avatar_url': issue.user.avatar_url if issue.user else None,
+                        'labels': [{'name': label.name, 'color': label.color} for label in issue.labels],
+                        'assignees': [assignee.login for assignee in issue.assignees],
+                        'comments_count': issue.comments or 0,
+                        'closed_at': issue.closed_at,
+                        'created_at': issue.created_at,
+                        'updated_at': issue.updated_at,
+                    })
+                except Exception as e:
+                    logger.warning(f"Skipping issue #{issue.number} due to: {e}")
+                    continue
             
             return issue_list
         except GithubException as e:
@@ -199,8 +216,13 @@ class GitHubAPIClient:
             commits = repo.get_commits()
             
             commit_list = []
-            for commit in commits[:limit]:
-                commit_list.append({
+            count = 0
+            for commit in commits:
+                if count >= limit:
+                    break
+                count += 1
+                try:
+                    commit_list.append({
                     'sha': commit.sha,
                     'message': commit.commit.message,
                     'html_url': commit.html_url,
@@ -212,7 +234,10 @@ class GitHubAPIClient:
                     'deletions': commit.stats.deletions if commit.stats else 0,
                     'total_changes': commit.stats.total if commit.stats else 0,
                     'committed_at': commit.commit.author.date,
-                })
+                    })
+                except Exception as e:
+                    logger.warning(f"Skipping commit {commit.sha[:7]} due to: {e}")
+                    continue
             
             return commit_list
         except GithubException as e:

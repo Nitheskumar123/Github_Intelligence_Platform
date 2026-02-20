@@ -169,6 +169,38 @@ body {
     color: white;
 }
 
+/* dashboard.css */
+
+.nav-link-external {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1rem;
+    color: var(--gray-700);
+    text-decoration: none;
+    /* Add this to remove the underline */
+    border-radius: 0.5rem;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.nav-link-external:hover {
+    background: var(--gray-50);
+    color: var(--primary);
+    text-decoration: none;
+    /* Ensure it stays gone on hover */
+}
+
+/* Ensure the badge doesn't affect the line height */
+.nav-link-external .badge {
+    margin-left: auto;
+    text-decoration: none;
+}
+
+.nav-link-external svg {
+    flex-shrink: 0;
+}
+
 /* ============================================
    MAIN CONTENT
    ============================================ */

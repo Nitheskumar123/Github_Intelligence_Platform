@@ -1,7 +1,8 @@
 from rest_framework import serializers
 from .models import (
     User, Repository, PullRequest, Issue, Commit, 
-    Contributor, RepositoryWebhook, WebhookEvent
+    Contributor, RepositoryWebhook, WebhookEvent,
+    Conversation, ChatMessage
 )
 
 
@@ -232,3 +233,51 @@ class WebhookEventSerializer(serializers.ModelSerializer):
             'created_at',
         ]
         read_only_fields = ['id', 'created_at']
+
+
+class ConversationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Conversation model
+    """
+    message_count = serializers.SerializerMethodField()
+    last_message = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Conversation
+        fields = [
+            'id',
+            'title',
+            'message_count',
+            'last_message',
+            'created_at',
+            'updated_at',
+        ]
+    
+    def get_message_count(self, obj):
+        return obj.messages.count()
+    
+    def get_last_message(self, obj):
+        last_msg = obj.messages.last()
+        if last_msg:
+            return {
+                'role': last_msg.role,
+                'content': last_msg.content[:100],
+                'timestamp': last_msg.created_at
+            }
+        return None
+
+
+class ChatMessageSerializer(serializers.ModelSerializer):
+    """
+    Serializer for ChatMessage model
+    """
+    class Meta:
+        model = ChatMessage
+        fields = [
+            'id',
+            'role',
+            'content',
+            'tokens_used',
+            'processing_time',
+            'created_at',
+        ]
