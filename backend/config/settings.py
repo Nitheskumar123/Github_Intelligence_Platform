@@ -15,6 +15,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(','
 
 # Application definition
 INSTALLED_APPS = [
+    'daphne',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -148,6 +149,8 @@ CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 CELERY_TASK_TRACK_STARTED = True
 CELERY_TASK_TIME_LIMIT = 30 * 60  # 30 minutes
+CELERY_WORKER_POOL = 'solo'  # Windows compatible pool (runs tasks synchronously)
+CELERY_TASK_ALWAYS_EAGER = False  # For development/testing - run tasks immediately
 
 # GitHub API Configuration
 GITHUB_API_BASE_URL = 'https://api.github.com'
@@ -165,3 +168,24 @@ CACHES = {
         'TIMEOUT': 900,  # 15 minutes
     }
 }
+
+# ============================================================================
+# CHANNELS CONFIGURATION (WebSocket support)
+# ============================================================================
+INSTALLED_APPS += ['channels']
+
+ASGI_APPLICATION = 'config.asgi.application'
+
+# Use in-memory channel layer for development (no Redis required)
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels.layers.InMemoryChannelLayer'
+    }
+}
+
+GROQ_API_KEY = config('GROQ_API_KEY', default='')
+GROQ_MODEL = 'llama-3.3-70b-versatile'
+GROQ_MAX_TOKENS = 2048
+
+# Chat Configuration
+MAX_CHAT_HISTORY = 50  # Maximum messages to keep in conversation

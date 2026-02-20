@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     User, Repository, PullRequest, Issue, Commit, 
-    Contributor, RepositoryWebhook, WebhookEvent, GitHubOAuthState
+    Contributor, RepositoryWebhook, WebhookEvent, GitHubOAuthState,
+    Conversation, ChatMessage
 )
 
 
@@ -77,3 +78,26 @@ class WebhookEventAdmin(admin.ModelAdmin):
 class GitHubOAuthStateAdmin(admin.ModelAdmin):
     list_display = ('state', 'created_at', 'is_used')
     readonly_fields = ('state', 'created_at')
+
+
+@admin.register(Conversation)
+class ConversationAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'title', 'message_count', 'created_at')
+    search_fields = ('title', 'user__github_login')
+    readonly_fields = ('created_at', 'updated_at')
+    
+    def message_count(self, obj):
+        return obj.messages.count()
+    message_count.short_description = 'Messages'
+
+
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    list_display = ('id', 'conversation', 'role', 'content_preview', 'tokens_used', 'created_at')
+    list_filter = ('role',)
+    search_fields = ('content',)
+    readonly_fields = ('created_at',)
+    
+    def content_preview(self, obj):
+        return obj.content[:100]
+    content_preview.short_description = 'Content'

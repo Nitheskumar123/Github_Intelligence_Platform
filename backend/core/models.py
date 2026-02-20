@@ -315,3 +315,50 @@ class GitHubOAuthState(models.Model):
         from datetime import timedelta
         threshold = timezone.now() - timedelta(minutes=10)
         cls.objects.filter(created_at__lt=threshold).delete()
+
+
+class Conversation(models.Model):
+    """
+    AI Chat Conversation
+    """
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='conversations')
+    title = models.CharField(max_length=255, default='New Conversation')
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'conversations'
+        ordering = ['-updated_at']
+    
+    def __str__(self):
+        return f"{self.user.github_login}: {self.title}"
+
+
+class ChatMessage(models.Model):
+    """
+    Individual chat messages in a conversation
+    """
+    ROLE_CHOICES = [
+        ('user', 'User'),
+        ('assistant', 'Assistant'),
+    ]
+    
+    conversation = models.ForeignKey(Conversation, on_delete=models.CASCADE, related_name='messages')
+    role = models.CharField(max_length=10, choices=ROLE_CHOICES)
+    content = models.TextField()
+    
+    # Metadata
+    tokens_used = models.IntegerField(default=0)
+    processing_time = models.FloatField(default=0.0)  # in seconds
+    
+    # Timestamp
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'chat_messages'
+        ordering = ['created_at']
+    
+    def __str__(self):
+        return f"{self.role}: {self.content[:50]}..."

@@ -45,4 +45,10 @@ urlpatterns = [
     path('repositories/<int:repo_id>/webhook/', views.setup_webhook, name='setup_webhook'),
     path('repositories/<int:repo_id>/webhook/status/', views.webhook_status, name='webhook_status'),
     path('webhooks/github/', views.github_webhook_receiver, name='github_webhook_receiver'),
+    
+    # Chat APIs
+    path('conversations/', views.list_conversations, name='list_conversations'),
+    path('conversations/create/', views.create_conversation, name='create_conversation'),
+    path('conversations/<int:conversation_id>/', views.conversation_detail, name='conversation_detail'),
+    path('conversations/<int:conversation_id>/delete/', views.delete_conversation, name='delete_conversation'),
 ]

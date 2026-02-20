@@ -530,3 +530,69 @@ def health_check(request):
         'status': 'healthy',
         'message': 'GitHub Intelligence Platform API is running'
     }, status=200)
+
+
+# ============================================================================
+# CHAT API VIEWS
+# ============================================================================
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def list_conversations(request):
+    """List all conversations for current user"""
+    from .models import Conversation
+    from .serializers import ConversationSerializer
+    
+    conversations = Conversation.objects.filter(user=request.user)
+    serializer = ConversationSerializer(conversations, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def conversation_detail(request, conversation_id):
+    """Get conversation details with messages"""
+    from .models import Conversation
+    from .serializers import ConversationSerializer, ChatMessageSerializer
+    
+    try:
+        conversation = Conversation.objects.get(id=conversation_id, user=request.user)
+        conversation_data = ConversationSerializer(conversation).data
+        messages = conversation.messages.all()
+        messages_data = ChatMessageSerializer(messages, many=True).data
+        
+        return Response({
+            'conversation': conversation_data,
+            'messages': messages_data
+        })
+    except Conversation.DoesNotExist:
+        return Response({'error': 'Conversation not found'}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def create_conversation(request):
+    """Create new conversation"""
+    from .models import Conversation
+    from .serializers import ConversationSerializer
+    
+    conversation = Conversation.objects.create(
+        user=request.user,
+        title=request.data.get('title', 'New Conversation')
+    )
+    serializer = ConversationSerializer(conversation)
+    return Response(serializer.data, status=201)
+
+
+@api_view(['DELETE'])
+@permission_classes([IsAuthenticated])
+def delete_conversation(request, conversation_id):
+    """Delete conversation"""
+    from .models import Conversation
+    
+    try:
+        conversation = Conversation.objects.get(id=conversation_id, user=request.user)
+        conversation.delete()
+        return Response({'message': 'Conversation deleted'}, status=200)
+    except Conversation.DoesNotExist:
+        return Response({'error': 'Conversation not found'}, status=404)
