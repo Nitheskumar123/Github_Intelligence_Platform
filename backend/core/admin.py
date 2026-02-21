@@ -101,3 +101,33 @@ class ChatMessageAdmin(admin.ModelAdmin):
     def content_preview(self, obj):
         return obj.content[:100]
     content_preview.short_description = 'Content'
+# ... (keep existing admin registrations)
+
+from .models import PRAnalysis, CodeInsight, DocumentationGeneration, CommitAnalysis
+
+@admin.register(PRAnalysis)
+class PRAnalysisAdmin(admin.ModelAdmin):
+    list_display = ('pull_request', 'issues_found', 'security_score', 'quality_score', 'analyzed_at')
+    readonly_fields = ('analyzed_at',)
+    search_fields = ('pull_request__title',)
+
+
+@admin.register(CodeInsight)
+class CodeInsightAdmin(admin.ModelAdmin):
+    list_display = ('title', 'repository', 'insight_type', 'priority', 'is_resolved', 'created_at')
+    list_filter = ('insight_type', 'priority', 'is_resolved', 'category')
+    search_fields = ('title', 'description')
+    readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(DocumentationGeneration)
+class DocumentationGenerationAdmin(admin.ModelAdmin):
+    list_display = ('repository', 'doc_type', 'status', 'created_at', 'completed_at')
+    list_filter = ('doc_type', 'status')
+    readonly_fields = ('created_at', 'completed_at')
+
+
+@admin.register(CommitAnalysis)
+class CommitAnalysisAdmin(admin.ModelAdmin):
+    list_display = ('repository', 'total_commits', 'quality_score', 'analyzed_at')
+    readonly_fields = ('analyzed_at',)

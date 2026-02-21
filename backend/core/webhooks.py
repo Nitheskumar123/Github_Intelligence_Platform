@@ -134,3 +134,42 @@ def handle_ping_event(webhook_event):
     """
     logger.info(f"Received ping event for {webhook_event.repository.full_name}")
     # Just log it, no action needed
+# ... (keep all existing webhook handlers)
+
+def handle_pull_request_event(webhook_event):
+    """
+    Handle pull request event - trigger analysis
+    
+    Args:
+        webhook_event (WebhookEvent): Webhook event object
+    """
+    payload = webhook_event.payload
+    action = payload.get('action')
+    
+    logger.info(f"Processing PR event ({action}) for {webhook_event.repository.full_name}")
+    
+    # Trigger analysis on opened or synchronize (updated)
+    if action in ['opened', 'synchronize']:
+        pr_data = payload.get('pull_request', {})
+        pr_number = pr_data.get('number')
+        
+        if pr_number:
+            # Find PR in database
+            from .models import PullRequest
+            from .tasks import analyze_pull_request
+            
+            try:
+                pr = PullRequest.objects.get(
+                    repository=webhook_event.repository,
+                    number=pr_number
+                )
+                
+                # Queue analysis task
+                analyze_pull_request.delay(pr.id)
+                logger.info(f"Queued analysis for PR #{pr_number}")
+                
+            except PullRequest.DoesNotExist:
+                logger.warning(f"PR #{pr_number} not found in database, syncing first")
+                # Sync PR then analyze
+                from .tasks import sync_pull_requests
+                sync_pull_requests.delay(webhook_event.repository.id)

@@ -51,4 +51,17 @@ urlpatterns = [
     path('conversations/create/', views.create_conversation, name='create_conversation'),
     path('conversations/<int:conversation_id>/', views.conversation_detail, name='conversation_detail'),
     path('conversations/<int:conversation_id>/delete/', views.delete_conversation, name='delete_conversation'),
+    # ... (keep all existing URLs)
+
+# Code Analysis APIs
+    path('repositories/<int:repo_id>/pulls/<int:pr_number>/analyze/', views.analyze_pr, name='analyze_pr'),
+    path('repositories/<int:repo_id>/pulls/<int:pr_number>/analysis/', views.get_pr_analysis, name='get_pr_analysis'),
+    path('repositories/<int:repo_id>/documentation/generate/', views.generate_documentation, name='generate_documentation'),
+    path('repositories/<int:repo_id>/documentation/', views.get_documentation, name='get_documentation'),
+    path('insights/', views.get_insights, name='get_insights'),
+    path('repositories/<int:repo_id>/insights/', views.get_repository_insights, name='get_repository_insights'),
+    path('repositories/<int:repo_id>/insights/generate/', views.generate_insights, name='generate_insights'),
+    path('insights/<int:insight_id>/resolve/', views.resolve_insight, name='resolve_insight'),
+    # After the insights line, ADD:
+path('insights/generate/', views.generate_insights_all, name='generate_insights_all'),
 ]

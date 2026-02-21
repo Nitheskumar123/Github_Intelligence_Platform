@@ -596,3 +596,191 @@ def delete_conversation(request, conversation_id):
         return Response({'message': 'Conversation deleted'}, status=200)
     except Conversation.DoesNotExist:
         return Response({'error': 'Conversation not found'}, status=404)
+# ... (keep all existing views)
+
+# ============================================================================
+# CODE ANALYSIS API VIEWS
+# ============================================================================
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def analyze_pr(request, repo_id, pr_number):
+    """Trigger PR analysis"""
+    from .models import Repository, PullRequest
+    from .tasks import analyze_pull_request
+    
+    try:
+        repository = Repository.objects.get(id=repo_id, user=request.user)
+        pr = PullRequest.objects.get(repository=repository, number=pr_number)
+        
+        # Queue analysis
+        analyze_pull_request.delay(pr.id)
+        
+        return Response({
+            'message': f'Analysis started for PR #{pr_number}',
+            'pr_id': pr.id
+        }, status=202)
+        
+    except (Repository.DoesNotExist, PullRequest.DoesNotExist):
+        return Response({'error': 'PR not found'}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_pr_analysis(request, repo_id, pr_number):
+    """Get PR analysis results"""
+    from .models import Repository, PullRequest, PRAnalysis
+    from .serializers import PRAnalysisSerializer
+    
+    try:
+        repository = Repository.objects.get(id=repo_id, user=request.user)
+        pr = PullRequest.objects.get(repository=repository, number=pr_number)
+        
+        if hasattr(pr, 'analysis'):
+            serializer = PRAnalysisSerializer(pr.analysis)
+            return Response(serializer.data)
+        else:
+            return Response({'message': 'No analysis available yet'}, status=404)
+        
+    except (Repository.DoesNotExist, PullRequest.DoesNotExist):
+        return Response({'error': 'PR not found'}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_documentation(request, repo_id):
+    """Generate repository documentation"""
+    from .models import Repository
+    from .tasks import generate_repository_documentation
+    
+    try:
+        repository = Repository.objects.get(id=repo_id, user=request.user)
+        doc_type = request.data.get('doc_type', 'readme')
+        
+        # Queue documentation generation
+        generate_repository_documentation.delay(repository.id, doc_type)
+        
+        return Response({
+            'message': f'Generating {doc_type} documentation',
+            'repository': repository.full_name
+        }, status=202)
+        
+    except Repository.DoesNotExist:
+        return Response({'error': 'Repository not found'}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_documentation(request, repo_id):
+    """Get generated documentation"""
+    from .models import Repository, DocumentationGeneration
+    from .serializers import DocumentationGenerationSerializer
+    
+    try:
+        repository = Repository.objects.get(id=repo_id, user=request.user)
+        
+        # Get latest documentation
+        docs = DocumentationGeneration.objects.filter(
+            repository=repository,
+            status='completed'
+        ).order_by('-created_at')
+        
+        serializer = DocumentationGenerationSerializer(docs, many=True)
+        return Response(serializer.data)
+        
+    except Repository.DoesNotExist:
+        return Response({'error': 'Repository not found'}, status=404)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_insights(request):
+    """Get AI insights for user"""
+    from .models import CodeInsight
+    from .serializers import CodeInsightSerializer
+    
+    # Get insights for user's repositories
+    insights = CodeInsight.objects.filter(
+        repository__user=request.user,
+        is_resolved=False
+    ).order_by('-priority', '-created_at')[:20]
+    
+    serializer = CodeInsightSerializer(insights, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_repository_insights(request, repo_id):
+    """Get insights for specific repository"""
+    from .models import Repository, CodeInsight
+    from .serializers import CodeInsightSerializer
+    
+    try:
+        repository = Repository.objects.get(id=repo_id, user=request.user)
+        
+        insights = CodeInsight.objects.filter(
+            repository=repository,
+            is_resolved=False
+        ).order_by('-priority', '-created_at')
+        
+        serializer = CodeInsightSerializer(insights, many=True)
+        return Response(serializer.data)
+        
+    except Repository.DoesNotExist:
+        return Response({'error': 'Repository not found'}, status=404)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_insights(request, repo_id):
+    """Trigger insight generation for repository"""
+    from .models import Repository
+    from .tasks import generate_insights_for_repository
+    
+    try:
+        repository = Repository.objects.get(id=repo_id, user=request.user)
+        
+        # Queue insight generation
+        generate_insights_for_repository.delay(repository.id)
+        
+        return Response({
+            'message': 'Generating insights',
+            'repository': repository.full_name
+        }, status=202)
+        
+    except Repository.DoesNotExist:
+        return Response({'error': 'Repository not found'}, status=404)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def generate_insights_all(request):
+    """Trigger insight generation for all user repositories"""
+    from .tasks import generate_insights_for_user
+    
+    # Queue insight generation
+    generate_insights_for_user.delay(request.user.id)
+    
+    return Response({
+        'message': 'Generating insights for all repositories'
+    }, status=202)
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def resolve_insight(request, insight_id):
+    """Mark insight as resolved"""
+    from .models import CodeInsight
+    
+    try:
+        insight = CodeInsight.objects.get(
+            id=insight_id,
+            repository__user=request.user
+        )
+        
+        insight.is_resolved = True
+        insight.resolved_at = timezone.now()
+        insight.save()
+        
+        return Response({'message': 'Insight resolved'}, status=200)
+        
+    except CodeInsight.DoesNotExist:
+        return Response({'error': 'Insight not found'}, status=404)
