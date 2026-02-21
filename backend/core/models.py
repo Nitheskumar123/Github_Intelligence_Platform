@@ -362,3 +362,169 @@ class ChatMessage(models.Model):
     
     def __str__(self):
         return f"{self.role}: {self.content[:50]}..."
+# ... (keep all existing models)
+
+class PRAnalysis(models.Model):
+    """
+    AI Analysis of Pull Request
+    """
+    SEVERITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('critical', 'Critical'),
+    ]
+    
+    pull_request = models.OneToOneField(PullRequest, on_delete=models.CASCADE, related_name='analysis')
+    
+    # Analysis results
+    summary = models.TextField()
+    issues_found = models.IntegerField(default=0)
+    security_score = models.IntegerField(default=100)  # 0-100
+    performance_score = models.IntegerField(default=100)
+    quality_score = models.IntegerField(default=100)
+    complexity_score = models.IntegerField(default=0)
+    
+    # Detailed findings
+    security_issues = models.JSONField(default=list)
+    performance_issues = models.JSONField(default=list)
+    code_smells = models.JSONField(default=list)
+    positive_points = models.JSONField(default=list)
+    
+    # Metadata
+    analyzed_at = models.DateTimeField(auto_now_add=True)
+    analysis_time = models.FloatField(default=0.0)
+    tokens_used = models.IntegerField(default=0)
+    
+    # GitHub integration
+    comment_posted = models.BooleanField(default=False)
+    github_comment_id = models.CharField(max_length=100, null=True, blank=True)
+    
+    class Meta:
+        db_table = 'pr_analyses'
+        verbose_name = 'PR Analysis'
+        verbose_name_plural = 'PR Analyses'
+    
+    def __str__(self):
+        return f"Analysis of PR #{self.pull_request.number}"
+
+
+class CodeInsight(models.Model):
+    """
+    Proactive AI insights about repositories
+    """
+    INSIGHT_TYPES = [
+        ('alert', 'Alert'),
+        ('suggestion', 'Suggestion'),
+        ('win', 'Win'),
+        ('trend', 'Trend'),
+    ]
+    
+    PRIORITY_CHOICES = [
+        ('low', 'Low'),
+        ('medium', 'Medium'),
+        ('high', 'High'),
+        ('critical', 'Critical'),
+    ]
+    
+    repository = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='insights')
+    
+    # Insight details
+    insight_type = models.CharField(max_length=20, choices=INSIGHT_TYPES)
+    priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='medium')
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    recommendation = models.TextField(null=True, blank=True)
+    
+    # Metadata
+    category = models.CharField(max_length=50)  # security, performance, quality, etc.
+    is_resolved = models.BooleanField(default=False)
+    resolved_at = models.DateTimeField(null=True, blank=True)
+    
+    # Links
+    related_pr = models.ForeignKey(PullRequest, null=True, blank=True, on_delete=models.SET_NULL)
+    related_issue = models.ForeignKey(Issue, null=True, blank=True, on_delete=models.SET_NULL)
+    action_url = models.URLField(max_length=500, null=True, blank=True)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'code_insights'
+        ordering = ['-priority', '-created_at']
+    
+    def __str__(self):
+        return f"{self.insight_type}: {self.title}"
+
+
+class DocumentationGeneration(models.Model):
+    """
+    Track documentation generation requests
+    """
+    DOC_TYPES = [
+        ('readme', 'README'),
+        ('api', 'API Documentation'),
+        ('contributing', 'Contributing Guide'),
+        ('changelog', 'Changelog'),
+        ('full', 'Full Documentation'),
+    ]
+    
+    repository = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='documentation_generations')
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    
+    # Request details
+    doc_type = models.CharField(max_length=20, choices=DOC_TYPES)
+    options = models.JSONField(default=dict)
+    
+    # Generation results
+    status = models.CharField(max_length=20, default='pending')  # pending, processing, completed, failed
+    content = models.TextField(null=True, blank=True)
+    error_message = models.TextField(null=True, blank=True)
+    
+    # Metadata
+    tokens_used = models.IntegerField(default=0)
+    generation_time = models.FloatField(default=0.0)
+    
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        db_table = 'documentation_generations'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.doc_type} for {self.repository.full_name}"
+
+
+class CommitAnalysis(models.Model):
+    """
+    Analysis of commit quality
+    """
+    repository = models.ForeignKey(Repository, on_delete=models.CASCADE, related_name='commit_analyses')
+    
+    # Time period
+    period_start = models.DateTimeField()
+    period_end = models.DateTimeField()
+    
+    # Analysis results
+    total_commits = models.IntegerField(default=0)
+    good_commits = models.IntegerField(default=0)
+    needs_improvement = models.IntegerField(default=0)
+    quality_score = models.IntegerField(default=0)  # 0-100
+    
+    # Detailed findings
+    issues = models.JSONField(default=list)
+    recommendations = models.JSONField(default=list)
+    best_commits = models.JSONField(default=list)
+    
+    # Metadata
+    analyzed_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'commit_analyses'
+        ordering = ['-analyzed_at']
+    
+    def __str__(self):
+        return f"Commit analysis for {self.repository.full_name} ({self.period_start.date()})"

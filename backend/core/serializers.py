@@ -2,7 +2,8 @@ from rest_framework import serializers
 from .models import (
     User, Repository, PullRequest, Issue, Commit, 
     Contributor, RepositoryWebhook, WebhookEvent,
-    Conversation, ChatMessage
+    Conversation, ChatMessage, PRAnalysis, CodeInsight, 
+    DocumentationGeneration
 )
 
 
@@ -281,3 +282,86 @@ class ChatMessageSerializer(serializers.ModelSerializer):
             'processing_time',
             'created_at',
         ]
+# ... (keep all existing serializers)
+
+class PRAnalysisSerializer(serializers.ModelSerializer):
+    """
+    Serializer for PR Analysis
+    """
+    pull_request_number = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = PRAnalysis
+        fields = [
+            'id',
+            'pull_request_number',
+            'summary',
+            'issues_found',
+            'security_score',
+            'performance_score',
+            'quality_score',
+            'complexity_score',
+            'security_issues',
+            'performance_issues',
+            'code_smells',
+            'positive_points',
+            'analyzed_at',
+            'analysis_time',
+            'tokens_used',
+            'comment_posted',
+        ]
+    
+    def get_pull_request_number(self, obj):
+        return obj.pull_request.number
+
+
+class CodeInsightSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Code Insight
+    """
+    repository_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = CodeInsight
+        fields = [
+            'id',
+            'repository_name',
+            'insight_type',
+            'priority',
+            'title',
+            'description',
+            'recommendation',
+            'category',
+            'is_resolved',
+            'action_url',
+            'created_at',
+            'updated_at',
+        ]
+    
+    def get_repository_name(self, obj):
+        return obj.repository.full_name
+
+
+class DocumentationGenerationSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Documentation Generation
+    """
+    repository_name = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = DocumentationGeneration
+        fields = [
+            'id',
+            'repository_name',
+            'doc_type',
+            'status',
+            'content',
+            'error_message',
+            'tokens_used',
+            'generation_time',
+            'created_at',
+            'completed_at',
+        ]
+    
+    def get_repository_name(self, obj):
+        return obj.repository.full_name

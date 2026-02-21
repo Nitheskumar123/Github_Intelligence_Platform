@@ -1,19 +1,7 @@
 import os
 from pathlib import Path
 from decouple import config
-import os
-from pathlib import Path
-from decouple import config
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Use config() for everything to keep it consistent
-SECRET_KEY = config('SECRET_KEY')
-DEBUG = config('DEBUG', default=True, cast=bool)
-ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
-
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY')
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -38,6 +26,7 @@ INSTALLED_APPS = [
     # Third party apps
     'rest_framework',
     'corsheaders',
+    'channels',
     
     # Local apps
     'core',
@@ -73,6 +62,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'config.wsgi.application'
+ASGI_APPLICATION = 'config.asgi.application'
 
 # Database
 DATABASES = {
@@ -135,6 +125,8 @@ REST_FRAMEWORK = {
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:8000",
     "http://127.0.0.1:8000",
+    # Note: If your frontend runs on a different port (like 3000 for React/Next.js), add it here:
+    # "http://localhost:3000", 
 ]
 CORS_ALLOW_CREDENTIALS = True
 
@@ -168,7 +160,7 @@ CELERY_TASK_ALWAYS_EAGER = False  # For development/testing - run tasks immediat
 GITHUB_API_BASE_URL = 'https://api.github.com'
 GITHUB_WEBHOOK_SECRET = config('GITHUB_WEBHOOK_SECRET', default='change-this-secret-in-production')
 
-# Cache Configuration (optional, for better performance)
+# Cache Configuration
 CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
@@ -184,17 +176,14 @@ CACHES = {
 # ============================================================================
 # CHANNELS CONFIGURATION (WebSocket support)
 # ============================================================================
-INSTALLED_APPS += ['channels']
-
-ASGI_APPLICATION = 'config.asgi.application'
-
-# Use in-memory channel layer for development (no Redis required)
+# Use in-memory channel layer for development (no Redis required for testing WS)
 CHANNEL_LAYERS = {
     'default': {
         'BACKEND': 'channels.layers.InMemoryChannelLayer'
     }
 }
 
+# Groq Configuration
 GROQ_API_KEY = config('GROQ_API_KEY', default='')
 GROQ_MODEL = 'llama-3.3-70b-versatile'
 GROQ_MAX_TOKENS = 2048
